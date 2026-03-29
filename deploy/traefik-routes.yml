@@ -1,0 +1,134 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Myrah NOC — Traefik Dynamic Routes (File Provider)
+#
+# PURPOSE: Routes HTTPS traffic from your domain to NOC services.
+#          Use this if your VPS Traefik uses file provider, OR as a fallback
+#          if Docker provider labels aren't being picked up.
+#
+# DEPLOY:
+#   1. Copy this file to the Traefik file provider directory on the VPS.
+#      Common locations:
+#        /etc/traefik/dynamic/myrah-noc.yml
+#        /opt/traefik/config/myrah-noc.yml
+#   2. Verify Traefik has `providers.file.directory` pointing to that folder.
+#   3. Replace YOUR_DOMAIN with your actual domain (e.g. myrah.io).
+#   4. Traefik picks up changes without restart (file provider is hot-reloaded).
+#
+# ASSUMES: Traefik has a 'letsencrypt' cert resolver and entry points
+#          named 'web' (HTTP/80) and 'websecure' (HTTPS/443).
+#          Adjust names to match your Traefik setup if different.
+# ─────────────────────────────────────────────────────────────────────────────
+
+http:
+
+  # ── Middlewares ─────────────────────────────────────────────────────────────
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    secure-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: true
+        sslRedirect: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+
+  # ── Routers ─────────────────────────────────────────────────────────────────
+  routers:
+
+    # NOC Grafana Metrics — metrics.YOUR_DOMAIN → port 3003
+    noc-grafana-https:
+      rule: "Host(`metrics.YOUR_DOMAIN`)"
+      entryPoints: [websecure]
+      service: noc-grafana-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares: [secure-headers]
+
+    noc-grafana-http:
+      rule: "Host(`metrics.YOUR_DOMAIN`)"
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: noc-grafana-svc
+
+    # NOC Landing Hub — noc.YOUR_DOMAIN → port 4000
+    noc-hub-https:
+      rule: "Host(`noc.YOUR_DOMAIN`)"
+      entryPoints: [websecure]
+      service: noc-hub-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares: [secure-headers]
+
+    noc-hub-http:
+      rule: "Host(`noc.YOUR_DOMAIN`)"
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: noc-hub-svc
+
+    # NOC Status Page (Uptime Kuma) — status.YOUR_DOMAIN
+    noc-status-https:
+      rule: "Host(`status.YOUR_DOMAIN`)"
+      entryPoints: [websecure]
+      service: noc-status-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares: [secure-headers]
+
+    noc-status-http:
+      rule: "Host(`status.YOUR_DOMAIN`)"
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: noc-status-svc
+
+    # Prometheus (internal access only — restrict by IP if needed)
+    # Uncomment to expose: prometheus.YOUR_DOMAIN
+    # noc-prometheus-https:
+    #   rule: "Host(`prometheus.YOUR_DOMAIN`)"
+    #   entryPoints: [websecure]
+    #   service: noc-prometheus-svc
+    #   tls:
+    #     certResolver: letsencrypt
+
+    # Alertmanager (internal access only)
+    # Uncomment to expose: alerts.YOUR_DOMAIN
+    # noc-alertmanager-https:
+    #   rule: "Host(`alerts.YOUR_DOMAIN`)"
+    #   entryPoints: [websecure]
+    #   service: noc-alertmanager-svc
+    #   tls:
+    #     certResolver: letsencrypt
+
+  # ── Services ─────────────────────────────────────────────────────────────────
+  # Replace 89.116.228.186 with localhost if Traefik runs on the same host
+  services:
+
+    noc-grafana-svc:
+      loadBalancer:
+        servers:
+          - url: "http://89.116.228.186:3003"
+
+    noc-hub-svc:
+      loadBalancer:
+        servers:
+          - url: "http://89.116.228.186:4000"
+
+    noc-status-svc:
+      loadBalancer:
+        servers:
+          - url: "http://89.116.228.186:3001"
+
+    noc-prometheus-svc:
+      loadBalancer:
+        servers:
+          - url: "http://89.116.228.186:9090"
+
+    noc-alertmanager-svc:
+      loadBalancer:
+        servers:
+          - url: "http://89.116.228.186:9093"

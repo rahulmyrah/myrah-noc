@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOC Hub — Loading…</title><!-- app.js sets this from config -->
+  <link rel="icon" id="favicon" href="/assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="noc-root">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="noc-header">
+    <div class="header-brand">
+      <img id="brand-logo" class="header-logo" src="/assets/logo.svg" alt="Logo">
+      <div>
+        <div id="brand-name" class="header-name">NOC Hub</div>
+        <div id="brand-tagline" class="header-tagline">Operations Centre</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="kpi-strip" id="kpi-strip">
+        <!-- Populated by app.js after config + data load -->
+        <div class="kpi-pill blue skeleton" style="width:100px;height:22px"></div>
+        <div class="kpi-pill blue skeleton" style="width:100px;height:22px"></div>
+        <div class="kpi-pill blue skeleton" style="width:100px;height:22px"></div>
+      </div>
+      <span class="live-dot" id="live-dot"></span>
+      <span class="live-label" id="live-label">LIVE</span>
+      <span class="header-clock" id="header-clock"></span>
+    </div>
+  </header>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <main class="noc-main">
+
+    <!-- Row 1: Services sections grid + Alerts feed (60/40 split) -->
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:1rem;align-items:start">
+
+      <!-- Services Grid -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem">
+          <span style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em">Services</span>
+          <a id="configure-alerts-btn" href="#" target="_blank" class="btn-primary">
+            ⚙️ Configure Alerts
+          </a>
+        </div>
+        <div class="sections-grid" id="sections-grid">
+          <!-- Populated by app.js -->
+          <div class="skeleton" style="height:100px;border-radius:8px"></div>
+          <div class="skeleton" style="height:100px;border-radius:8px"></div>
+          <div class="skeleton" style="height:100px;border-radius:8px"></div>
+          <div class="skeleton" style="height:100px;border-radius:8px"></div>
+        </div>
+      </div>
+
+      <!-- Alerts Feed -->
+      <div class="panel" id="alerts-panel">
+        <div class="panel-header">
+          <span class="panel-title">🚨 Active Alerts</span>
+          <span class="panel-badge badge-grey" id="alerts-count-badge">—</span>
+        </div>
+        <div class="panel-body">
+          <div class="alert-list" id="alert-list">
+            <div class="skeleton" style="height:44px;margin-bottom:4px;border-radius:5px"></div>
+            <div class="skeleton" style="height:44px;margin-bottom:4px;border-radius:5px"></div>
+            <div class="skeleton" style="height:44px;border-radius:5px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Cost widget + Network status -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" id="row-2">
+
+      <!-- Cost Widget -->
+      <div class="panel" id="cost-panel">
+        <div class="panel-header">
+          <span class="panel-title">💰 Budget &amp; Cost</span>
+          <span class="panel-badge badge-blue" id="cost-status-badge">Loading…</span>
+        </div>
+        <div class="panel-body" id="cost-body">
+          <div class="skeleton" style="height:60px;border-radius:5px"></div>
+        </div>
+      </div>
+
+      <!-- Network / Connectivity Status -->
+      <div class="panel" id="network-panel">
+        <div class="panel-header">
+          <span class="panel-title">🌐 Connectivity</span>
+          <span class="panel-badge badge-grey" id="network-badge">—</span>
+        </div>
+        <div class="panel-body" id="network-body">
+          <div class="skeleton" style="height:60px;border-radius:5px"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+  <footer class="noc-footer">
+    <div>
+      Powered by
+      <a href="/proxy/uptime-kuma" target="_blank" style="color:var(--accent-light);text-decoration:none">Uptime Kuma</a>
+      ·
+      <a href="/proxy/prometheus" target="_blank" style="color:var(--accent-light);text-decoration:none">Prometheus</a>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:center">
+      <a href="/docs/" style="color:var(--text-muted);text-decoration:none;font-size:0.7rem">📖 Documentation</a>
+      <span id="footer-refresh" style="color:var(--text-muted)">Last refresh: —</span>
+    </div>
+  </footer>
+
+</div><!-- .noc-root -->
+
+<!-- ── AI Assistant FAB + Panel ──────────────────────────────────────────── -->
+<button class="ai-fab" id="ai-fab" title="Ask the NOC Assistant">🤖</button>
+<div class="ai-panel hidden" id="ai-panel">
+  <div class="ai-panel-hdr">
+    <span class="ai-panel-title">🤖 NOC Assistant</span>
+    <button class="ai-close" id="ai-close" aria-label="Close">✕</button>
+  </div>
+  <div class="ai-messages" id="ai-messages">
+    <div class="ai-msg bot">
+      Hi! I'm your NOC Assistant. I can help you configure monitors, set up alerts, understand your infrastructure, and answer questions about this platform.<br><br>
+      Try: <em>"How do I add a new monitor?"</em> or <em>"What's the best way to set up Teams alerts?"</em>
+    </div>
+  </div>
+  <div class="ai-input-row">
+    <input class="ai-input" id="ai-input" type="text" placeholder="Ask me anything about your NOC…" autocomplete="off">
+    <button class="ai-send" id="ai-send">Send</button>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script src="/ai-widget.js"></script>
+</body>
+</html>

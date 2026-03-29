@@ -1,0 +1,245 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Myrah NOC Platform — Docker Compose Stack
+#
+# Local:   docker compose up -d  →  access via localhost ports below
+#
+# VPS (HTTPS via Traefik — already running on the VPS):
+#   1. Set VPS_DOMAIN in .env (e.g. VPS_DOMAIN=noc.myrah.io)
+#   2. docker compose up -d
+#   3. Traefik labels on each service auto-register HTTPS routes.
+#      Traefik must have the Docker provider + a 'letsencrypt' cert resolver.
+#      If your resolver is named differently, update the
+#      traefik.http.routers.*.tls.certresolver labels below.
+#
+# Direct IP access (no domain):  http://89.116.228.186:<port>
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  myrah-noc-net:
+    driver: bridge
+  # Shared network with the existing Traefik container on this VPS.
+  # If Traefik uses a different network name, change it here and in each service.
+  traefik-net:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
+
+volumes:
+  prometheus_data:
+  alertmanager_data:
+  uptime_kuma_data:
+  healthchecks_data:
+  grafana_data:
+
+services:
+
+  # ── Prometheus ──────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: myrah-prometheus
+    restart: unless-stopped
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--web.cors.origin=.*'
+    networks: [myrah-noc-net]
+
+  # ── Alertmanager ────────────────────────────────────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: myrah-alertmanager
+    restart: unless-stopped
+    ports:
+      - '9093:9093'
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks: [myrah-noc-net]
+
+  # ── Uptime Kuma ─────────────────────────────────────────────────────────────
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: myrah-uptime-kuma
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    volumes:
+      - uptime_kuma_data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.noc-status.rule=Host(`status.${VPS_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.noc-status.entrypoints=websecure"
+      - "traefik.http.routers.noc-status.tls.certresolver=letsencrypt"
+      - "traefik.http.services.noc-status.loadbalancer.server.port=3001"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.noc-status-http.rule=Host(`status.${VPS_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.noc-status-http.entrypoints=web"
+      - "traefik.http.routers.noc-status-http.middlewares=redirect-to-https"
+    networks: [myrah-noc-net, traefik-net]
+
+  # ── Healthchecks ────────────────────────────────────────────────────────────
+  healthchecks:
+    image: healthchecks/healthchecks:v3.4
+    container_name: myrah-healthchecks
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    environment:
+      - SECRET_KEY=${HEALTHCHECKS_SECRET_KEY}
+      - ALLOWED_HOSTS=${VPS_DOMAIN:-localhost},127.0.0.1
+      - DB=sqlite
+      - SITE_ROOT=https://${VPS_DOMAIN:-localhost}
+      - EMAIL_BACKEND=django.core.mail.backends.dummy.EmailBackend
+    volumes:
+      - healthchecks_data:/data
+    networks: [myrah-noc-net]
+
+  # ── Azure Metrics Exporter ──────────────────────────────────────────────────
+  # Only starts when real Azure credentials are available:
+  #   docker compose --profile azure up -d
+  azure-metrics-exporter:
+    image: webdevops/azure-metrics-exporter:latest
+    container_name: myrah-azure-metrics
+    restart: unless-stopped
+    profiles: [azure]
+    ports:
+      - '9276:9276'
+    environment:
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+    volumes:
+      - ./azure-metrics/azure-metrics-config.yml:/app/config.yml:ro
+    networks: [myrah-noc-net]
+
+  # ── Blackbox Exporter ───────────────────────────────────────────────────────
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: myrah-blackbox
+    restart: unless-stopped
+    ports:
+      - '9115:9115'
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    networks: [myrah-noc-net]
+
+  # ── Grafana ─────────────────────────────────────────────────────────────────
+  # Grafana OSS (AGPL v3) — NOC Command Center, no source modifications
+  grafana:
+    image: grafana/grafana-oss:11.1.0
+    container_name: myrah-grafana
+    restart: unless-stopped
+    ports:
+      - '3003:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-MyrahNOC2026!}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      # NOC branding — hides "Grafana" name from the UI
+      - GF_APP_NAME=Myrah NOC
+      - GF_SERVER_ROOT_URL=https://${VPS_DOMAIN:-localhost:3003}/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_USERS_DEFAULT_THEME=dark
+      # Home dashboard = NOC Command Center (set after first run via API)
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/noc_home.json
+      # Azure credentials for datasource provisioning
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.noc-grafana.rule=Host(`metrics.${VPS_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.noc-grafana.entrypoints=websecure"
+      - "traefik.http.routers.noc-grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.noc-grafana.loadbalancer.server.port=3000"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.noc-grafana-http.rule=Host(`metrics.${VPS_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.noc-grafana-http.entrypoints=web"
+      - "traefik.http.routers.noc-grafana-http.middlewares=redirect-to-https"
+    depends_on:
+      - prometheus
+      - alertmanager
+    networks: [myrah-noc-net, traefik-net]
+
+  # ── Myrah NOC Dashboard ─────────────────────────────────────────────────────
+  noc-dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: myrah-noc-ui
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - VITE_PROMETHEUS_URL=http://localhost:9090
+      - VITE_ALERTMANAGER_URL=http://localhost:9093
+      - VITE_UPTIME_KUMA_URL=http://localhost:3001
+      - VITE_HEALTHCHECKS_URL=http://localhost:8000
+      - VITE_HEALTHCHECKS_API_KEY=${HEALTHCHECKS_API_KEY}
+      - VITE_CLIENT_NAME=${CLIENT_NAME}
+    depends_on:
+      - prometheus
+      - alertmanager
+      - uptime-kuma
+      - healthchecks
+    networks: [myrah-noc-net]
+
+  # ── NOC Landing Hub (white-label branded dashboard) ─────────────────────────
+  noc-hub:
+    build:
+      context: ./hub
+      dockerfile: Dockerfile
+    container_name: myrah-noc-hub
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.noc-hub.rule=Host(`noc.${VPS_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.noc-hub.entrypoints=websecure"
+      - "traefik.http.routers.noc-hub.tls.certresolver=letsencrypt"
+      - "traefik.http.services.noc-hub.loadbalancer.server.port=4000"
+      - "traefik.http.routers.noc-hub-http.rule=Host(`noc.${VPS_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.noc-hub-http.entrypoints=web"
+      - "traefik.http.routers.noc-hub-http.middlewares=redirect-to-https"
+    depends_on:
+      - uptime-kuma
+      - prometheus
+      - alertmanager
+    networks: [myrah-noc-net, traefik-net]
+
+  # ── NOC Hub API (AI assistant proxy — keeps OpenAI key server-side) ──────────
+  noc-hub-api:
+    build:
+      context: ./hub-api
+      dockerfile: Dockerfile
+    container_name: myrah-noc-hub-api
+    restart: unless-stopped
+    ports:
+      - '4001:4001'
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - UPTIME_KUMA_URL=http://myrah-uptime-kuma:3001
+      - PROMETHEUS_URL=http://myrah-prometheus:9090
+      - ALERTMANAGER_URL=http://myrah-alertmanager:9093
+      - PORT=4001
+    networks: [myrah-noc-net]

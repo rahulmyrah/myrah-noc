@@ -1,0 +1,79 @@
+{
+  "_comment": "Myrah NOC Hub — white-label config. Edit this file to rebrand for any client.",
+  "_version": "1.0",
+
+  "brand": {
+    "name": "AI Tools Factory NOC",
+    "tagline": "Infrastructure Operations Centre",
+    "logoUrl": "/assets/logo.svg",
+    "faviconUrl": "/assets/logo.svg"
+  },
+
+  "theme": {
+    "accent": "indigo",
+    "accentHex": "#6366f1",
+    "accentHexLight": "#818cf8",
+    "accentHexDim": "rgba(99,102,241,0.15)"
+  },
+
+  "locale": {
+    "country": "GB",
+    "currency": "GBP",
+    "currencySymbol": "£",
+    "timezone": "Europe/London",
+    "dateFormat": "DD/MM/YYYY"
+  },
+
+  "sections": [
+    {
+      "id": "compute",
+      "label": "Compute & Containers",
+      "icon": "☁️",
+      "monitorTags": ["compute", "aks", "vm", "app-service", "functions"]
+    },
+    {
+      "id": "data",
+      "label": "Data & Storage",
+      "icon": "🗄️",
+      "monitorTags": ["data", "database", "storage", "redis", "cosmos", "sql"]
+    },
+    {
+      "id": "ai",
+      "label": "AI & Messaging",
+      "icon": "🤖",
+      "monitorTags": ["ai", "messaging", "events", "service-bus", "event-hub"]
+    },
+    {
+      "id": "network",
+      "label": "Network & Security",
+      "icon": "🌐",
+      "monitorTags": ["network", "security", "vpn", "expressroute", "firewall", "keyvault"]
+    }
+  ],
+
+  "budget": {
+    "monthly": 5000,
+    "currency": "GBP",
+    "currencySymbol": "£"
+  },
+
+  "links": {
+    "alertConfig": "https://status.aitoolsfactory.com",
+    "metrics": "https://metrics.aitoolsfactory.com",
+    "docs": "/docs/",
+    "uptimeKuma": "https://status.aitoolsfactory.com"
+  },
+
+  "azure": {
+    "_note": "Fill in after Azure Service Principal is created",
+    "tenantId": "",
+    "subscriptionId": ""
+  },
+
+  "features": {
+    "showCostPanel": true,
+    "showNetworkPanel": true,
+    "showDevicesPanel": false,
+    "showAiAssistant": true
+  }
+}

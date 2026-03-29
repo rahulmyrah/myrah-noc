@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Sections — NOC Hub Docs</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap">
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Back to NOC Hub</a>
+    <a href="index.html">📖 Docs Home</a>
+  </div>
+  <h1>🗂️ Service Sections</h1>
+  <p>The NOC Hub groups monitors into sections displayed as cards. Sections are fully configurable via <code>client.config.json</code>.</p>
+
+  <h2>How Sections Work</h2>
+  <p>Each section has a <code>monitorTags</code> array. Any Uptime Kuma monitor tagged with one of these tags appears in that section. The section card colour reflects the worst monitor status (green/amber/red).</p>
+
+  <h2>Default Sections</h2>
+  <pre><code>"sections": [
+  { "id": "compute",  "label": "Compute &amp; Containers", "icon": "☁️",
+    "monitorTags": ["compute","aks","vm","app-service","functions"] },
+  { "id": "data",     "label": "Data &amp; Storage",       "icon": "🗄️",
+    "monitorTags": ["data","database","storage","redis","cosmos","sql"] },
+  { "id": "ai",       "label": "AI &amp; Messaging",       "icon": "🤖",
+    "monitorTags": ["ai","messaging","events","service-bus","event-hub"] },
+  { "id": "network",  "label": "Network &amp; Security",   "icon": "🌐",
+    "monitorTags": ["network","security","vpn","expressroute","firewall","keyvault"] }
+]</code></pre>
+
+  <h2>Adding a Custom Section</h2>
+  <p>Edit <code>hub/client.config.json</code> → add entry to <code>sections</code> array:</p>
+  <pre><code>{ "id": "pos", "label": "Point of Sale", "icon": "🛒",
+  "monitorTags": ["pos","payments","checkout"] }</code></pre>
+  <p>Rebuild: <code>docker compose build noc-hub &amp;&amp; docker compose up -d noc-hub</code></p>
+
+  <h2>Tagging a Monitor in Uptime Kuma</h2>
+  <ol>
+    <li>Open monitor → <strong>Edit</strong>.</li>
+    <li>In <strong>Tags</strong> field, type tag name → press Enter.</li>
+    <li>Add all relevant tags (a monitor can appear in multiple sections).</li>
+    <li>Save. NOC Hub reflects the change within 30 seconds.</li>
+  </ol>
+
+  <div class="tip">💡 For a retail client, try sections: "Customer Website", "POS Systems", "Payments", "Warehouse", "Back Office".</div>
+</body>
+</html>

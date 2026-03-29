@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant — NOC Hub Docs</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap">
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Back to NOC Hub</a>
+    <a href="index.html">📖 Docs Home</a>
+  </div>
+  <h1>🤖 AI Assistant</h1>
+  <p>The NOC Assistant (🤖 button, bottom right) is powered by OpenAI GPT-4o-mini and knows this platform end-to-end.</p>
+
+  <h2>What It Can Help With</h2>
+  <ul>
+    <li>Step-by-step instructions for configuring monitors and alert channels</li>
+    <li>Explaining what a specific monitor type does</li>
+    <li>Answering questions about the platform architecture</li>
+    <li>Helping you plan your service sections and tagging strategy</li>
+    <li>Explaining how to set up Azure integration</li>
+    <li>Pointing you to the right documentation page</li>
+  </ul>
+
+  <h2>Example Prompts</h2>
+  <ul>
+    <li><em>"How do I create a monitor for my Azure App Service?"</em></li>
+    <li><em>"Set up Teams notifications for when any service goes down"</em></li>
+    <li><em>"How do I add SMS alerts via Twilio?"</em></li>
+    <li><em>"What's the difference between HTTP and Push monitors?"</em></li>
+    <li><em>"How do I group my services into sections?"</em></li>
+    <li><em>"Show me how to connect my Azure subscription"</em></li>
+  </ul>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li>Cannot create monitors or make changes — it guides you through steps.</li>
+    <li>Cannot see live data from Uptime Kuma or Prometheus.</li>
+    <li>Conversation history resets when you close the browser tab.</li>
+  </ul>
+
+  <h2>Configuration</h2>
+  <p>Requires an OpenAI API key in <code>.env</code>:</p>
+  <pre><code>OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+  <p>To hide the assistant for a specific client, set in <code>client.config.json</code>:</p>
+  <pre><code>"features": { "showAiAssistant": false }</code></pre>
+  <p>Model: <code>gpt-4o-mini</code> — cost-effective, fast, ~$0.001 per conversation.</p>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alert Channels — NOC Hub Docs</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap">
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Back to NOC Hub</a>
+    <a href="index.html">📖 Docs Home</a>
+  </div>
+  <h1>🔔 Alert Channels Setup</h1>
+  <p>Uptime Kuma supports 60+ notification channels. Here are the most common for business use.</p>
+
+  <h2>Microsoft Teams</h2>
+  <ol>
+    <li>Open the Teams channel → click <strong>...</strong> → <strong>Connectors</strong> → <strong>Incoming Webhook</strong> → <strong>Add</strong>.</li>
+    <li>Give it a name (e.g. "Myrah NOC Alerts") → <strong>Create</strong>. Copy the webhook URL.</li>
+    <li>In Uptime Kuma: <strong>Settings → Notifications → Add Notification → Microsoft Teams</strong>.</li>
+    <li>Paste URL → <strong>Test</strong> → <strong>Save</strong>.</li>
+  </ol>
+
+  <h2>Slack</h2>
+  <ol>
+    <li>Go to <a href="https://api.slack.com/apps" target="_blank">api.slack.com/apps</a> → <strong>Create New App</strong> → From Scratch.</li>
+    <li><strong>Incoming Webhooks</strong> → toggle On → <strong>Add Webhook to Workspace</strong> → choose channel → Allow.</li>
+    <li>Copy webhook URL.</li>
+    <li>In Uptime Kuma: <strong>Settings → Notifications → Slack</strong> → paste URL → Test → Save.</li>
+  </ol>
+
+  <h2>Email (SMTP)</h2>
+  <ol>
+    <li>In Uptime Kuma: <strong>Settings → Notifications → Email (SMTP)</strong>.</li>
+    <li>Fill in SMTP settings:
+      <ul>
+        <li>Gmail: Host <code>smtp.gmail.com</code>, Port 587, TLS, use App Password (not your main password)</li>
+        <li>Office 365: Host <code>smtp.office365.com</code>, Port 587</li>
+      </ul>
+    </li>
+    <li>Set <strong>To</strong> email → Test → Save.</li>
+  </ol>
+
+  <h2>SMS via Twilio</h2>
+  <ol>
+    <li>Create account at <a href="https://twilio.com" target="_blank">twilio.com</a> → get a phone number with SMS.</li>
+    <li>Find Account SID and Auth Token on the Twilio Console dashboard.</li>
+    <li>In Uptime Kuma: <strong>Settings → Notifications → Twilio</strong>.</li>
+    <li>Enter Account SID, Auth Token, From number, To number → Test → Save.</li>
+  </ol>
+
+  <h2>WhatsApp via Twilio</h2>
+  <ol>
+    <li>Enable WhatsApp in Twilio Console (requires approval).</li>
+    <li>Use the same Twilio notification type — prefix numbers with <code>whatsapp:</code>.</li>
+    <li>Example To: <code>whatsapp:+447XXXXXXXXX</code></li>
+  </ol>
+
+  <h2>Telegram</h2>
+  <ol>
+    <li>Message <code>@BotFather</code> on Telegram → <code>/newbot</code> → get Bot Token.</li>
+    <li>Start a chat with your bot → get Chat ID from <code>https://api.telegram.org/botTOKEN/getUpdates</code>.</li>
+    <li>In Uptime Kuma: <strong>Telegram</strong> → enter Bot Token + Chat ID → Test → Save.</li>
+  </ol>
+
+  <div class="tip">💡 Best practice: create a "Critical" notification (Teams + SMS) and a "Warning" notification (email only). Assign based on monitor criticality.</div>
+</body>
+</html>

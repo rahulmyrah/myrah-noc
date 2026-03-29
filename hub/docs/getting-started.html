@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started — NOC Hub Docs</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap">
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Back to NOC Hub</a>
+    <a href="index.html">📖 Docs Home</a>
+  </div>
+  <h1>🚀 Getting Started</h1>
+  <p>From a fresh VPS to a fully running NOC Hub in under 30 minutes.</p>
+
+  <h2>Prerequisites</h2>
+  <ul>
+    <li>VPS with Docker + Docker Compose installed (Ubuntu 22.04 recommended)</li>
+    <li>Domain name with DNS A records pointing to your VPS IP</li>
+    <li>Traefik running on the VPS (handles HTTPS automatically)</li>
+    <li>Ports 80 and 443 open in VPS firewall</li>
+    <li>OpenAI API key (for AI assistant)</li>
+  </ul>
+
+  <h2>Step 1: Clone the repo on the VPS</h2>
+  <pre><code>git clone https://github.com/your-org/myrah-noc /opt/myrah-noc
+cd /opt/myrah-noc</code></pre>
+
+  <h2>Step 2: Create .env</h2>
+  <pre><code>cp .env.example .env
+nano .env
+# Set VPS_DOMAIN, OPENAI_API_KEY, and optionally Azure credentials</code></pre>
+
+  <h2>Step 3: Start the stack</h2>
+  <pre><code>docker compose up -d</code></pre>
+  <p>This starts: Prometheus, Alertmanager, Uptime Kuma, Healthchecks, Blackbox Exporter, Grafana, NOC Hub, and Hub API.</p>
+
+  <h2>Step 4: Configure Uptime Kuma</h2>
+  <ol>
+    <li>Open <code>https://status.YOUR_DOMAIN</code></li>
+    <li>Create admin account (first visit only)</li>
+    <li>Add first monitor — see <a href="monitors.html">Monitors guide</a></li>
+    <li>Set up notification channel — see <a href="alerts.html">Alerts guide</a></li>
+  </ol>
+
+  <h2>Step 5: Customise branding</h2>
+  <p>Edit <code>hub/client.config.json</code> with the client's brand name, logo URL, and accent colour:</p>
+  <pre><code>docker compose build noc-hub &amp;&amp; docker compose up -d noc-hub</code></pre>
+
+  <h2>Step 6: Smoke-test</h2>
+  <pre><code># Hub responds
+curl -o /dev/null -s -w '%{http_code}' https://noc.YOUR_DOMAIN
+# Expected: 200
+
+# AI assistant responds
+curl -X POST https://noc.YOUR_DOMAIN/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"hello"}]}'
+# Expected: {"reply":"..."}</code></pre>
+
+  <div class="tip">💡 First deploy? Use the AI Assistant on the NOC Hub — it will walk you through every configuration step.</div>
+</body>
+</html>

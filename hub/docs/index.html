@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOC Hub — Documentation</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap">
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Back to NOC Hub</a>
+    <strong style="color:#e2e8f0">📖 Docs Home</strong>
+  </div>
+  <h1>📖 NOC Hub Documentation</h1>
+  <p>Everything you need to configure, manage, and get the most out of your NOC platform.</p>
+
+  <h2>Guides</h2>
+  <ul>
+    <li><a href="getting-started.html">🚀 Getting Started</a> — First-time setup checklist</li>
+    <li><a href="monitors.html">📡 Creating &amp; Managing Monitors</a> — HTTP, TCP, SSL, Ping, Push</li>
+    <li><a href="alerts.html">🔔 Alert Channels</a> — Teams, Slack, Email, SMS, WhatsApp, Telegram</li>
+    <li><a href="sections.html">🗂️ Service Sections</a> — Customise section groups via config</li>
+    <li><a href="azure.html">☁️ Azure Integration</a> — Service Principal, metrics exporter, cost data</li>
+    <li><a href="ai-assistant.html">🤖 AI Assistant</a> — What it can do and example prompts</li>
+  </ul>
+
+  <h2>Quick Reference</h2>
+  <ul>
+    <li>Uptime Kuma: <code>/proxy/uptime-kuma</code> (port 3001)</li>
+    <li>Prometheus: <code>/proxy/prometheus</code> (port 9090)</li>
+    <li>Alertmanager: <code>/proxy/alertmanager</code> (port 9093)</li>
+    <li>Config file: <code>hub/client.config.json</code></li>
+    <li>Hub API: internal port 4001 (AI proxy)</li>
+  </ul>
+
+  <div class="tip">💡 Ask the AI Assistant (🤖 button, bottom right on the hub) any question about this platform — it knows everything in these docs.</div>
+</body>
+</html>

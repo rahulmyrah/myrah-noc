@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azure Integration — NOC Hub Docs</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap">
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Back to NOC Hub</a>
+    <a href="index.html">📖 Docs Home</a>
+  </div>
+  <h1>☁️ Azure Integration</h1>
+  <p>Connect your Azure subscription to pull live resource metrics and cost data into the NOC Hub.</p>
+
+  <h2>Step 1: Create a Service Principal (read-only)</h2>
+  <pre><code>az login
+
+SUBSCRIPTION_ID="your-subscription-id-here"
+
+# Create Service Principal with Monitoring Reader role
+az ad sp create-for-rbac \
+  --name "myrah-noc-reader" \
+  --role "Monitoring Reader" \
+  --scopes /subscriptions/$SUBSCRIPTION_ID \
+  --output json
+
+# Add Cost Management Reader role
+az role assignment create \
+  --assignee "&lt;appId from above&gt;" \
+  --role "Cost Management Reader" \
+  --scope /subscriptions/$SUBSCRIPTION_ID</code></pre>
+  <p>Save the output — you need <code>appId</code> (CLIENT_ID), <code>password</code> (CLIENT_SECRET), and <code>tenant</code> (TENANT_ID).</p>
+
+  <h2>Step 2: Update .env on the VPS</h2>
+  <pre><code>AZURE_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+AZURE_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+AZURE_CLIENT_SECRET=your-client-secret-value
+AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code></pre>
+
+  <h2>Step 3: Start the Azure Metrics Exporter</h2>
+  <pre><code>docker compose --profile azure up -d
+docker compose ps azure-metrics-exporter
+# Expected: Up</code></pre>
+
+  <h2>Step 4: Verify metrics are flowing</h2>
+  <pre><code>curl "http://localhost:9276/metrics" | grep azure | head -10
+
+curl "http://localhost:9090/api/v1/targets" | python3 -m json.tool | grep azure</code></pre>
+
+  <div class="warn">⚠️ Never commit .env to git. It contains your Azure Service Principal secret.</div>
+</body>
+</html>

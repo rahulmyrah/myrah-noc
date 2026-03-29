@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creating Monitors — NOC Hub Docs</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap">
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Back to NOC Hub</a>
+    <a href="index.html">📖 Docs Home</a>
+  </div>
+  <h1>📡 Creating &amp; Managing Monitors</h1>
+  <p>Monitors are the core of Uptime Kuma. Each monitor checks a service at a defined interval and alerts if it fails.</p>
+
+  <h2>How to Create a Monitor</h2>
+  <ol>
+    <li>Open Uptime Kuma via the <strong>Configure Alerts</strong> button on the NOC Hub.</li>
+    <li>Click <strong>+ Add New Monitor</strong> (top right).</li>
+    <li>Choose a <strong>Monitor Type</strong> (see below).</li>
+    <li>Fill in required fields, add <strong>Tags</strong>, assign a <strong>Notification</strong>.</li>
+    <li>Click <strong>Save</strong>.</li>
+  </ol>
+
+  <h2>Monitor Types</h2>
+  <h3>HTTP(s) — Most Common</h3>
+  <p>Checks a URL returns the expected HTTP status code. Use for websites, APIs, health endpoints.</p>
+  <ul>
+    <li><strong>URL</strong>: Full URL including <code>https://</code></li>
+    <li><strong>Expected Status</strong>: 200 (default). Use 200-299 for any success.</li>
+    <li><strong>Keyword</strong>: Optional — alert if response body does NOT contain this string.</li>
+  </ul>
+
+  <h3>TCP Port</h3>
+  <p>Checks a TCP port accepts connections. Use for databases (5432, 3306, 1433), SMTP (587), Redis (6379).</p>
+
+  <h3>SSL Certificate</h3>
+  <p>Monitors SSL cert expiry. Alerts N days before expiry (configurable, default 7 days).</p>
+
+  <h3>Ping (ICMP)</h3>
+  <p>Checks if a server responds to ping. Use for VMs and network devices with no HTTP endpoint.</p>
+
+  <h3>DNS</h3>
+  <p>Checks that a hostname resolves to the expected IP. Useful for detecting DNS misconfiguration.</p>
+
+  <h3>Push</h3>
+  <p>Your server calls a unique URL to say "I'm alive". Alert if Uptime Kuma doesn't receive a push within the interval. Use for cron jobs and scheduled tasks.</p>
+  <pre><code>curl -fsS "https://status.aitoolsfactory.com/api/push/XXXXXXXXXX?status=up&amp;msg=OK"</code></pre>
+
+  <h2>Recommended Settings</h2>
+  <ul>
+    <li><strong>Heartbeat Interval</strong>: 60s (30s for critical services)</li>
+    <li><strong>Retries</strong>: 3 (avoids false alarms)</li>
+    <li><strong>Retry Interval</strong>: 20s</li>
+    <li><strong>Resend Notification</strong>: Every 1h for sustained outages</li>
+  </ul>
+
+  <h2>Tagging for NOC Hub Sections</h2>
+  <p>Tags determine which section a monitor appears in on the NOC Hub dashboard. Add tags matching the <code>monitorTags</code> in <code>client.config.json</code>:</p>
+  <ul>
+    <li><strong>Compute &amp; Containers</strong>: <code>compute</code>, <code>aks</code>, <code>vm</code>, <code>app-service</code>, <code>functions</code></li>
+    <li><strong>Data &amp; Storage</strong>: <code>data</code>, <code>database</code>, <code>storage</code>, <code>redis</code>, <code>cosmos</code>, <code>sql</code></li>
+    <li><strong>AI &amp; Messaging</strong>: <code>ai</code>, <code>messaging</code>, <code>events</code>, <code>service-bus</code></li>
+    <li><strong>Network &amp; Security</strong>: <code>network</code>, <code>security</code>, <code>vpn</code>, <code>firewall</code>, <code>keyvault</code></li>
+  </ul>
+  <div class="tip">💡 Tags are case-insensitive. A monitor can have multiple tags and appear in multiple sections.</div>
+  <div class="warn">⚠️ Monitors without matching tags won't appear in NOC Hub sections. Always add at least one tag per monitor.</div>
+</body>
+</html>
